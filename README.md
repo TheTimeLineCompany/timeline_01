@@ -29,7 +29,7 @@ Timeline expects these services to already exist. The repository does not ship c
 
 The raw wiki content is intentionally managed as a separate project: **Local Wiki Data Setup**.
 
-- https://github.com/TheTimeLineCompany/local-wiki-data-setup
+- https://github.com/TheTimeLineCompany/Wiki_Local_Setup
 
 That tool should import and prepare the source wiki tables that Timeline reads from.
 
