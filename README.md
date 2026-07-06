@@ -27,7 +27,11 @@ Timeline expects these services to already exist. The repository does not ship c
 
 ## Local Wiki Data Setup
 
-The raw wiki content is intentionally managed as a separate project: **Local Wiki Data Setup**. That tool should import and prepare the source wiki tables that Timeline reads from.
+The raw wiki content is intentionally managed as a separate project: **Local Wiki Data Setup**.
+
+- https://github.com/TheTimeLineCompany/local-wiki-data-setup
+
+That tool should import and prepare the source wiki tables that Timeline reads from.
 
 Expected source-table contract:
 
@@ -35,10 +39,6 @@ Expected source-table contract:
 - `public."wiki_content_lookup_V4"`
 
 Timeline treats those tables as read-only truth. Application caches, embeddings, extracted entities, temporal rows, related-cache rows, job state, and scoring artifacts live under the configured Postgres cache schema, defaulting to `timeline_v4`.
-
-Recommended companion repository name:
-
-- `TheTimeLineCompany/local-wiki-data-setup`
 
 ## Configuration
 
