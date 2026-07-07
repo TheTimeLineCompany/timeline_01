@@ -88,11 +88,27 @@ function cleanAgentInsight(text: string): string {
     .trim()
 }
 
-function formatStatusUpdatedAt(value?: string | null): string {
-  if (!value) return 'not recorded'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'not recorded'
+function parseApiTimestamp(value?: string | null): Date | null {
+  if (!value) return null
+  const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}Z`
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function formatLocalTime(value?: string | null): string {
+  const date = parseApiTimestamp(value)
+  if (!date) return 'not recorded'
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function formatLocalDateTime(value?: string | null): string {
+  const date = parseApiTimestamp(value)
+  if (!date) return 'not recorded'
+  return date.toLocaleString()
+}
+
+function formatStatusUpdatedAt(value?: string | null): string {
+  return formatLocalTime(value)
 }
 
 function compactStatusSource(value?: string): string {
@@ -881,7 +897,7 @@ function ReaderView({
                       {String(entity.name || entity.label || 'Entity')}
                     </span>
                   ))}
-                  {article.core.updated_at ? <small>{new Date(article.core.updated_at).toLocaleTimeString()}</small> : null}
+                  {article.core.updated_at ? <small>{formatLocalTime(article.core.updated_at)}</small> : null}
                 </div>
               </div>
             ) : null}
@@ -1202,7 +1218,7 @@ function RelatedPanel({
             </div>
             {latestAgentUpdatedAt && (
               <div className="agent-timestamp">
-                Generated {new Date(latestAgentUpdatedAt).toLocaleString()}
+                Generated {formatLocalDateTime(latestAgentUpdatedAt)}
               </div>
             )}
             {error && <p className="muted">{error}</p>}
@@ -1673,7 +1689,7 @@ function UnifiedTimelineView({
                     <span>Agent temporal context</span>
                     <p>{timelineExplanations[event.id].why_text}</p>
                     <small>
-                      {timelineExplanations[event.id].why_source} Â· {new Date(timelineExplanations[event.id].generated_at).toLocaleTimeString()}
+                      {timelineExplanations[event.id].why_source} Â· {formatLocalTime(timelineExplanations[event.id].generated_at)}
                     </small>
                   </div>
                 ) : null}

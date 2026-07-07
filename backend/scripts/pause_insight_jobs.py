@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import update
 
@@ -25,13 +25,17 @@ CPU_SAFE_JOB_TYPES = [
 PAUSED_STATUS = "paused_core_mode"
 
 
+def utc_now() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
 async def pause_jobs() -> int:
     async with async_session_factory() as session:
         result = await session.execute(
             update(AgentJob)
             .where(AgentJob.job_type.in_(INSIGHT_JOB_TYPES))
             .where(AgentJob.status.in_(["pending", "retry"]))
-            .values(status=PAUSED_STATUS, updated_at=datetime.utcnow())
+            .values(status=PAUSED_STATUS, updated_at=utc_now())
         )
         await session.commit()
         return result.rowcount or 0
@@ -43,7 +47,7 @@ async def resume_jobs() -> int:
             update(AgentJob)
             .where(AgentJob.job_type.in_(INSIGHT_JOB_TYPES))
             .where(AgentJob.status == PAUSED_STATUS)
-            .values(status="pending", run_after=None, updated_at=datetime.utcnow())
+            .values(status="pending", run_after=None, updated_at=utc_now())
         )
         await session.commit()
         return result.rowcount or 0
