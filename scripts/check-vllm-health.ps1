@@ -9,6 +9,32 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Root = Split-Path -Parent $ScriptDir
+$BackendEnvPath = Join-Path $Root "backend\.env"
+
+function Read-DotEnvValue {
+    param(
+        [string]$Path,
+        [string]$Name
+    )
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+    $line = Get-Content -LiteralPath $Path |
+        Where-Object { $_ -match "^\s*$([regex]::Escape($Name))\s*=" } |
+        Select-Object -First 1
+    if (-not $line) {
+        return $null
+    }
+    $value = ($line -split "=", 2)[1].Trim()
+    return $value.Trim('"').Trim("'")
+}
+
+if (-not $ApiKey) {
+    $ApiKey = Read-DotEnvValue -Path $BackendEnvPath -Name "LLM_API_KEY"
+}
+
 function Get-VllmMetricValue {
     param(
         [string]$Metrics,

@@ -11,11 +11,33 @@ $VllmWatchdog = Join-Path $ScriptDir "watch-vllm-health.ps1"
 $ResetAgentLocks = Join-Path $Backend "scripts\reset_agent_locks.py"
 $PauseInsightJobs = Join-Path $Backend "scripts\pause_insight_jobs.py"
 $Python = Join-Path $Backend ".venv\Scripts\python.exe"
-$LlmBaseUrl = if ($env:LLM_BASE_URL) { $env:LLM_BASE_URL.TrimEnd("/") } else { "http://127.0.0.1:8101/v1" }
+
+function Read-DotEnvValue {
+    param(
+        [string]$Path,
+        [string]$Name
+    )
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+    $line = Get-Content -LiteralPath $Path |
+        Where-Object { $_ -match "^\s*$([regex]::Escape($Name))\s*=" } |
+        Select-Object -First 1
+    if (-not $line) {
+        return $null
+    }
+    $value = ($line -split "=", 2)[1].Trim()
+    return $value.Trim('"').Trim("'")
+}
+
+$BackendEnvPath = Join-Path $Backend ".env"
+$LlmApiKey = if ($env:LLM_API_KEY) { $env:LLM_API_KEY } else { Read-DotEnvValue -Path $BackendEnvPath -Name "LLM_API_KEY" }
+$LlmBaseUrlValue = if ($env:LLM_BASE_URL) { $env:LLM_BASE_URL } else { Read-DotEnvValue -Path $BackendEnvPath -Name "LLM_BASE_URL" }
+$LlmBaseUrl = if ($LlmBaseUrlValue) { $LlmBaseUrlValue.TrimEnd("/") } else { "http://127.0.0.1:8101/v1" }
 $VllmUrl = "$LlmBaseUrl/models"
 $VllmHeaders = @{}
-if ($env:LLM_API_KEY) {
-    $VllmHeaders.Authorization = "Bearer $($env:LLM_API_KEY)"
+if ($LlmApiKey) {
+    $VllmHeaders.Authorization = "Bearer $LlmApiKey"
 }
 
 $AgentWorkerCount = 1
